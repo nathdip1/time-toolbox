@@ -2,9 +2,9 @@ How to use this tool:
 
 Save the files in your system
 Then open Command promt inside the project folder
-Run the below command in the give seq: 
-npm init -y
-npm install express body-parser cors
+Run these commands in the given seq: 
+1.npm init -y
+2.npm install express body-parser cors
 npm start
 
 That's it your Time toolbox is ready to use in:
