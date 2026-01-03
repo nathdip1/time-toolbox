@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>🧰 Time Toolbox</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 480px;
+        margin: 40px auto;
+        padding: 0 1rem;
+        text-align: center;
+        color: #222;
+      }
+      input,
+      button {
+        padding: 8px 10px;
+        margin: 6px 0;
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+      }
+      form {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+      }
+      h2 {
+        margin-bottom: 10px;
+      }
+      #current-date {
+        margin-top: 20px;
+        font-weight: 600;
+      }
+      #api-link {
+        margin-top: 15px;
+        padding: 10px;
+        background: #f4f4f4;
+        border-radius: 6px;
+        word-break: break-all;
+        font-family: monospace;
+      }
+      a {
+        color: #0078d7;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>🧰 Time Toolbox</h2>
+    <p>Set or reset a Date for any project using your secret key</p>
+
+    <!-- Set Date -->
+    <form id="set-date-form">
+      <h3>Set Date</h3>
+      <input type="text" id="key" placeholder="Enter your secret key" required /><br />
+      <input type="date" id="fakeDate" required /><br />
+      <button type="submit">✅ Set Date</button>
+    </form>
+
+    <!-- Reset Date -->
+    <form id="reset-date-form">
+      <h3>Reset Date</h3>
+      <input
+        type="text"
+        id="resetKey"
+        placeholder="Enter your secret key"
+        required
+      /><br />
+      <button type="submit">🧹 Reset Date</button>
+    </form>
+
+    <!-- Display section -->
+    <p id="current-date">No key checked yet.</p>
+    <div id="api-link" style="display: none;"></div>
+
+    <script>
+      const API_URL = window.location.origin + "/api";
+
+      // Handle setting a Date
+      document.getElementById("set-date-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const key = document.getElementById("key").value.trim();
+        const fakeDate = document.getElementById("fakeDate").value;
+
+        if (!key || !fakeDate) {
+          alert("Please fill both fields!");
+          return;
+        }
+
+        try {
+          const res = await fetch(API_URL + "/fake-time", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key, fakeDate }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            alert("✅ Date set: " + data.fakeDate);
+            showCurrentDate(key);
+            showApiLink(key);
+          } else {
+            alert("❌ Failed: " + (data.error || "unknown error"));
+          }
+        } catch (err) {
+          alert("Server error: " + err.message);
+        }
+      });
+
+      // Handle reset
+      document.getElementById("reset-date-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const key = document.getElementById("resetKey").value.trim();
+        if (!key) {
+          alert("Please enter your key to reset!");
+          return;
+        }
+
+        try {
+          const res = await fetch(API_URL + "/reset-time", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key }),
+          });
+          const data = await res.json();
+          alert("🧹 " + data.message);
+          showCurrentDate(key);
+          showApiLink(key);
+        } catch (err) {
+          alert("Server error: " + err.message);
+        }
+      });
+
+      // Function to show current Date/time
+      async function showCurrentDate(key) {
+        try {
+          const res = await fetch(API_URL + "/fake-time?key=" + key);
+          const data = await res.json();
+          if (data.fakeDate) {
+            document.getElementById("current-date").textContent =
+              "📅 Current Date: " +
+              data.fakeDate +
+              " | 🕒 System Time: " +
+              data.currentTime;
+          } else {
+            document.getElementById("current-date").textContent =
+              "🕰️ Using real system date/time (" + data.currentTime + ")";
+          }
+        } catch {
+          document.getElementById("current-date").textContent =
+            "⚠️ Unable to fetch current Date.";
+        }
+      }
+
+      // Function to show API link dynamically
+      function showApiLink(key) {
+        const linkDiv = document.getElementById("api-link");
+        if (key) {
+          const fullLink = `${window.location.origin}/api/fake-time?key=${encodeURIComponent(
+            key
+          )}`;
+          linkDiv.innerHTML = `
+            <strong>📎 API link:</strong><br />
+            <a href="${fullLink}" target="_blank">${fullLink}</a>
+          `;
+          linkDiv.style.display = "block";
+        } else {
+          linkDiv.style.display = "none";
+          linkDiv.innerHTML = "";
+        }
+      }
+    </script>
+  </body>
+</html>
